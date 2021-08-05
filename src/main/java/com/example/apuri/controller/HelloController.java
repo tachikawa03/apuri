@@ -1,24 +1,96 @@
 package com.example.apuri.controller;
 
+import com.example.apuri.model.TaskModel;
 import org.springframework.stereotype.Controller;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 @Controller
 @EnableAutoConfiguration
 public class HelloController
 {
     private static String DBNAME = "sample.db";
+
     @RequestMapping("/")
-    @ResponseBody
-    public String home() {
-        return "Spring Boot Sample Application!";
+    public String index(Model model) {
+        String dbname = DBNAME; // 利用するデータベースファイル
+        Connection conn = null;
+        Statement stmt = null;
+        var tasklist = new ArrayList<TaskModel>();
+        try {
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + dbname);
+            stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM task order by update_at desc, id desc");
+            while (rs.next()) {
+                var task = new TaskModel();
+                task.id = rs.getString("id");
+                task.task = rs.getString("task");
+                task.create_at = rs.getTimestamp("create_at");
+                task.update_at = rs.getTimestamp("update_at");
+                tasklist.add(task);
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        model.addAttribute("tasklist", tasklist);
+        return "index";
     }
 
-    @RequestMapping("/all")
+    @PostMapping("/task/add")
+    public String task_add(@RequestParam("task") String task, Model model) {
+//        model.addAttribute("", "");
+        System.out.println(task);
+        String dbname = DBNAME; // 利用するデータベースファイル
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + dbname);
+            System.out.println("接続成功");
+            stmt = conn.prepareStatement("INSERT INTO task (task, create_at, update_at) VALUES(?, ?, ?)");
+            stmt.setString(1, task);
+            stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+            stmt.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+            stmt.execute();
+            System.out.println("データ挿入");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return "forward:/";
+    }
+
+    @RequestMapping("/sample")
     @ResponseBody
     public String all() {
         String dbname = DBNAME; // 利用するデータベースファイル
