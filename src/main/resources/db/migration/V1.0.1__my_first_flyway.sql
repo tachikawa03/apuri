@@ -1,6 +1,6 @@
 create table access_log (
-    id bigint unsigned primary key auto_increment,
+    id integer primary key autoincrement,
     request_start_at timestamp not null,
-    proc_time int,
-    url varchar(10000)
+    proc_time integer,
+    url varchar
 );

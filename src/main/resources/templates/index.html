@@ -1,0 +1,35 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>apuri</title>
+</head>
+<body>
+<form th:action="@{/task/add}" method="post">
+    <p>
+        <label for="task">タスクを入力してください</label>
+        <input type="text" name="task" id="task">
+    </p>
+    <p>
+        <input type="submit" value="登録">
+    </p>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>タスク</th>
+            <th>更新日時</th>
+            <th>登録日時</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasklist}" th:object="${task}" class="align-middle">
+            <td th:text="*{id}"></td>
+            <td th:text="*{task}"></td>
+            <td th:text="${#dates.format(task.update_at, 'yyyy/MM/dd')}"></td>
+            <td th:text="${#dates.format(task.create_at, 'yyyy/MM/dd')}"></td>
+        </tr>
+        </tbody>
+    </table>
+</form>
+</body>
+</html>
